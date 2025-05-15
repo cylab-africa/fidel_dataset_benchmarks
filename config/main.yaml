@@ -1,0 +1,88 @@
+SCENARIO : 1 ## 1 English 2 Amharic 3 English and Amharic
+USE_WANDB : False
+# DATASET_PATH : /data/synthetic_data/labels/output_labels.csv #/home/ubuntu/HandWritten_Amharic_English_OCR/dataset/labeled_english.csv #labeled_english.csv
+# TRAIN_PATH : /data/synthetic_data/labels/output_labels_train.csv
+# VAL_PATH : /data/synthetic_data/labels/output_labels_test.csv
+# IMG_ROOT: /data/synthetic_data/data
+
+TRAIN_TASK: "SYNTHETIC"
+
+## HandWritten
+HANDWRITTEN_TRAIN_PATH : /home/ubuntu/data/handwritten_labels/gabby_handwritten_train.csv
+HANDWRITTEN_VAL_PATH : /home/ubuntu/data/handwritten_labels/gabby_handwritten_test.csv
+HANDWRITTEN_IMG_ROOT : /home/ubuntu/data/Amharic_Data/train
+HANDWRITTEN_IMG_ROOT_TEST : /home/ubuntu/data/Amharic_Data/test
+
+
+# typed
+TYPED_TRAIN_PATH : /home/ubuntu/data/typed_labels/gabby_typed_train.csv
+TYPED_VAL_PATH : /home/ubuntu/data/typed_labels/gabby_typed_test.csv
+TYPED_IMG_ROOT : /home/ubuntu/data/Amharic_Data/train
+TYPED_IMG_ROOT_TEST : /home/ubuntu/data/Amharic_Data/test
+
+
+# SYNTHETIC
+SYNTHETIC_TRAIN_PATH :  /home/ubuntu/data/synthetic_data/labels/gabby_synthetic_train.csv
+SYNTHETIC_VAL_PATH :  /home/ubuntu/data/synthetic_data/labels/gabby_synthetic_test.csv
+SYNTHETIC_IMG_ROOT : /home/ubuntu/data/Amharic_Data/train
+SYNTHETIC_IMG_ROOT_TEST : /home/ubuntu/data/Amharic_Data/test
+
+
+
+HDD_TRAIN_PATH :  /home/ubuntu/data/hdd_labels/gabby_hdd_train.csv
+HDD_VAL_PATH :  /home/ubuntu/data/hdd_labels/gabby_hdd_test.csv
+HDD_IMG_ROOT : /home/ubuntu/data/Amharic_Data/train
+HDD_IMG_ROOT_TEST : /home/ubuntu/data/Amharic_Data/test
+
+
+BATCH_SIZE : 64
+MODEL_ID : microsoft/trocr-base-handwritten
+EPOCHS: 100
+
+
+###### Encoder Parameters ------------------------------------------
+## Universal (Part I and II)
+enc_dropout     : 0.2                   # [0.1, 0.4]
+## Transformer-related (Part II)
+enc_num_layers  : 1                     # [1, 3]
+enc_num_heads   : 1                     # [1, 4]
+
+###### Decoder Parameters ------------------------------------------
+## Transformer-related (Part I and II)
+dec_dropout     : 0.2                   # [0.1, 0.4]
+dec_num_layers  : 4                     # [1, 3]
+dec_num_heads   : 4                     # [1, 4]
+
+###### Network Parameters ------------------------------------------------------
+d_model         : 256                   # [256, 1024]
+d_ff            : 1024                  # [512, 4096]
+
+###### Learning Rate ---------------------------------------------------------------
+learning_rate   : 5E-5                  # [1E-3, 1E-4], this will depend on the specified optimizer
+
+###### Optimizer ---------------------------------------------------------------
+optimizer       : "AdamW"               # Adam, AdamW
+
+## if SGD
+momentum        : 0.0
+nesterov        : True
+
+###### Scheduler ---------------------------------------------------------------
+scheduler       : "CosineAnnealing"     # CosineAnnealing, ReduceLR
+
+## if ReduceLR
+
+## we are validating every 2 epochs but scheduler acts on every epoch. Set patience accordingly
+## patience less than validation frquency can mean learning rate always dropping after patience epochs
+## specify a suitable threshold too
+factor          : 0.9
+patience        : 6
+
+###### Training Parameters -----------------------------------------------------
+epochs          : 50
+
+###### Name --------------------------------------------------------------------
+Name: "blessed"  
+
+###Beam
+BEAM_WIDTH : 10

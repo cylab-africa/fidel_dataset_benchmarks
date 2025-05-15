@@ -1,0 +1,84 @@
+TrOCRMyDecoder(
+  (encoder): ViT(
+    (to_patch_embedding): Sequential(
+      (0): Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=32, p2=32)
+      (1): LayerNorm((3072,), eps=1e-05, elementwise_affine=True)
+      (2): Linear(in_features=3072, out_features=512, bias=True)
+      (3): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+    )
+    (dropout): Dropout(p=0.0, inplace=False)
+    (transformer): Transformer(
+      (norm): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+      (layers): ModuleList(
+        (0-3): 4 x ModuleList(
+          (0): Attention(
+            (norm): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+            (attend): Softmax(dim=-1)
+            (dropout): Dropout(p=0.0, inplace=False)
+            (to_qkv): Linear(in_features=512, out_features=768, bias=False)
+            (to_out): Sequential(
+              (0): Linear(in_features=256, out_features=512, bias=True)
+              (1): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (1): FeedForward(
+            (net): Sequential(
+              (0): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+              (1): Linear(in_features=512, out_features=1024, bias=True)
+              (2): GELU(approximate='none')
+              (3): Dropout(p=0.0, inplace=False)
+              (4): Linear(in_features=1024, out_features=512, bias=True)
+              (5): Dropout(p=0.0, inplace=False)
+            )
+          )
+        )
+      )
+    )
+    (to_latent): Identity()
+  )
+  (proj): Linear(in_features=512, out_features=256, bias=True)
+  (layernorm): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+  (decoder): Decoder(
+    (dec_layers): ModuleList(
+      (0-5): 6 x DecoderLayer(
+        (mha1): MultiHeadAttention(
+          (w_qs): Linear(in_features=256, out_features=256, bias=True)
+          (w_ks): Linear(in_features=256, out_features=256, bias=True)
+          (w_vs): Linear(in_features=256, out_features=256, bias=True)
+          (attention): ScaledDotProductAttention(
+            (dropout): Dropout(p=0.2, inplace=False)
+            (softmax): Softmax(dim=2)
+          )
+          (fc): Linear(in_features=256, out_features=256, bias=True)
+          (dropout): Dropout(p=0.2, inplace=False)
+        )
+        (mha2): MultiHeadAttention(
+          (w_qs): Linear(in_features=256, out_features=256, bias=True)
+          (w_ks): Linear(in_features=256, out_features=256, bias=True)
+          (w_vs): Linear(in_features=256, out_features=256, bias=True)
+          (attention): ScaledDotProductAttention(
+            (dropout): Dropout(p=0.2, inplace=False)
+            (softmax): Softmax(dim=2)
+          )
+          (fc): Linear(in_features=256, out_features=256, bias=True)
+          (dropout): Dropout(p=0.2, inplace=False)
+        )
+        (ffn): FeedForward(
+          (linear_1): Linear(in_features=256, out_features=1024, bias=True)
+          (dropout): Dropout(p=0.1, inplace=False)
+          (linear_2): Linear(in_features=1024, out_features=256, bias=True)
+        )
+        (layernorm1): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+        (layernorm2): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+        (layernorm3): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+        (dropout1): Dropout(p=0.2, inplace=False)
+        (dropout2): Dropout(p=0.2, inplace=False)
+        (dropout3): Dropout(p=0.2, inplace=False)
+      )
+    )
+    (target_embedding): Embedding(343, 256)
+    (positional_encoding): PositionalEncoding()
+    (final_linear): Linear(in_features=256, out_features=343, bias=True)
+    (dropout): Dropout(p=0.2, inplace=False)
+  )
+)
