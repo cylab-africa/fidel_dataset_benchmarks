@@ -1,8 +1,9 @@
-# %%
+
 from __future__ import annotations
 import pandas as pd
 import os
 import glob
+from dotenv import load_dotenv
 
 import torch
 from torch.utils.data import Dataset
@@ -21,20 +22,25 @@ import json
 from tqdm.auto import tqdm
 from collections import Counter
 import wandb
-test_csv = pd.read_csv('../raw_data/Amharic_Data/test/all_test.csv')
-train_csv = pd.read_csv('../raw_data/Amharic_Data/train/all_train.csv')
+import yaml
+from dotenv import load_dotenv
 
-# %%
+import yaml
+
+with open("config.yaml") as f:
+    cfg = yaml.safe_load(f)
+
+
+train_csv = pd.read_csv(cfg["paths"]["train_csv"])
+test_csv = pd.read_csv(cfg["paths"]["test_csv"])
+
 all_text = ''.join(test_csv['line_text'].tolist() + train_csv['line_text'].tolist())
 
-# %%
 vocab = set(all_text)
 
 
-# %%
 CHARS = ''.join(sorted(vocab))
 
-# %%
 
 
 class MyDataset(Dataset):
@@ -90,8 +96,6 @@ def my_collate_fn(batch):
     targets = torch.cat(targets, 0)
     target_lengths = torch.cat(target_lengths, 0)
     return images, targets, target_lengths
-
-# %%
 
 class LabelConverter:
     """String ⇄ index-tensor converter for CTC.
@@ -155,64 +159,57 @@ class LabelConverter:
             out.append(" ".join(chars) if raw else "".join(chars))
         return out
 
-# %%
 
 
-# %%
 
-data_type = "hdd"
-# Assuming your DataFrame is named `df`
-typed_df_1 = train_csv[train_csv['type'] == 'typed']
-# data_type2 = "synthetic"
-typed_df_2 = train_csv[train_csv['type'] == 'synthetic']
+train_df = train_csv[train_csv['type'] == cfg['train_data_type']]
 
-typed_df_3 = train_csv[train_csv['type'] == 'handwritten']
+if cfg['test_data_type'] == 'hdd':
+    test_18 = test_csv[test_csv['type'] == 'hdd_18']
+    test_rand = test_csv[test_csv['type'] == 'hdd_rand']
+    test_df = pd.concatenate(test_18, test_rand)
+else:
+    test_df = test_csv[test_csv['type'] == cfg['test_data_type']]
 
-typed_df = pd.concat([typed_df_1, typed_df_2, typed_df_3], ignore_index=True)
-
-# %%
 converter = LabelConverter(MyDataset.CHARS)
 
-# %%
-print(len(typed_df))
-train_df, val_df = train_test_split(typed_df, test_size=0.2, random_state=42, shuffle=True)
+
+train_df, val_df = train_test_split(train_df, test_size=cfg['dataset']['dev_size'], random_state=cfg['dataset']['random_state'], shuffle=True)
 
 
-# %%
-img_width = 1000
-img_height = 100
-data_dir =  '/home/admin/Gabby/Amharic OCR/HandWritten_Amharic_English_OCR/raw_data/Amharic_Data/train'
+img_width = cfg['dataset']['img_width']
+img_height = cfg['dataset']['img_height']
+data_dir =  cfg['paths']['root_dir']
 
-# %%
 train_dataset =MyDataset(root_dir=data_dir, mode='train',
                                     df=train_df, img_height=img_height, img_width=img_width)
 valid_dataset = MyDataset(root_dir=data_dir, mode='valid',
                                     df=val_df, img_height=img_height, img_width=img_width)
+test_dataset = MyDataset(root_dir=cfg['paths']['test_root'], mode='valid',
+                                    df=test_df, img_height=img_height, img_width=img_width)
 train_loader = torch.utils.data.DataLoader(
     train_dataset,
-    batch_size=64,
+    batch_size=cfg['dataset']['batch_size'],
     shuffle=True,
     num_workers=4,
     collate_fn=my_collate_fn,
 )
 valid_loader = torch.utils.data.DataLoader(
     valid_dataset,
-    batch_size=64,
+    batch_size=cfg['dataset']['batch_size'],
     shuffle=False,
     num_workers=4,
     collate_fn=my_collate_fn,
 )
 
-# %%
-# import matplotlib.pyplot as plt
-# image = train_dataset.__getitem__(0)[0]
-# image = image.squeeze(0).numpy()
+test_loader = torch.utils.data.DataLoader(
+    test_dataset,
+    batch_size=cfg['dataset']['batch_size'],
+    shuffle=False,
+    num_workers=4,
+    collate_fn=my_collate_fn,
+)
 
-
-# plt.imshow(image, cmap='gray')
-
-
-# %%
 for images, targets, target_lengths in train_loader:
     
     batch_size = images.size(0)
@@ -231,20 +228,17 @@ for images, targets, target_lengths in train_loader:
         decoded_text = converter.decode_indices([target_tensor], raw=False)
         print(f"Decoded text: {decoded_text}")
         
-        break  # remove or modify to check more
+        break  
     break
-
-# %%
-
-
-# %% [markdown]
-# ### Modeling
-
-# %%
 
 
 class CRNN(nn.Module):
-    def __init__(self, num_classes: int, hidden_size: int = 256):
+    def __init__(self, num_classes: int, hidden_size: int = cfg['model']['hidden_size']):
+        """CRNN model for OCR.
+        Args:
+            num_classes: Number of classes (including blank).
+            hidden_size: Size of the LSTM hidden state.
+        """
         super().__init__()
         self.cnn = nn.Sequential(
             nn.Conv2d(1, 64, 3, 1, 1), nn.ReLU(True), nn.MaxPool2d(2, 2),
@@ -275,17 +269,14 @@ class CRNN(nn.Module):
         log_probs = F.log_softmax(logits, dim=-1)  # (B,W',C)
         return log_probs.permute(1, 0, 2)  
 
-# %%
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# %%
 model = CRNN(len(MyDataset.CHARS)+1).to(device)
 
-# %%
-criterion = nn.CTCLoss(blank=0, zero_infinity=True)
-optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
 
-# %%
+criterion = nn.CTCLoss(blank=0, zero_infinity=True)
+optimizer = torch.optim.AdamW(model.parameters(), lr=cfg['training']['learning_rate'])
+
 def _levenshtein(a: str, b: str) -> int:
     if a == b:
         return 0
@@ -314,7 +305,6 @@ def _split_targets(targets: torch.Tensor, lengths: torch.Tensor) -> List[List[in
         ptr += l
     return out
 
-# %%
 
 
 def run_epoch(model, loader, crit, opt, device, conv, *, train=True,
@@ -403,27 +393,34 @@ def run_epoch(model, loader, crit, opt, device, conv, *, train=True,
 
     return stats, best_cer
 
-# %%
 
 
-# This prompts you to enter your API key the first time
-wandb.login(key="7a2297338ed4c184a8cf1c11b29bd7f0f010f9e3")
+# set wandb api key in .env file
+wandb.login()
 
-# %%
-model_name = "synthetic_typed_ocr"
+if cfg['finetude']['fine_tune']:
+    fine_tune_model_name = cfg['finetude']['fine_tune_model_name']
+    checkpoint = torch.load(f'{fine_tune_model_name}_logs/best_cer.pt')
+    model.load_state_dict(checkpoint['model'])
 
 
-checkpoint = torch.load(f'{model_name}_logs/best_cer.pt')
+model_name = cfg['model']['model_name']
 
-model.load_state_dict(checkpoint['model'])
-
-model_name = "synthetic_typed_hand_ocr"
 
 wandb.init(project="Amharic OCR", name=model_name)
-# %%
- # ── training loop ────────────────────────────────
 wandb.watch(model, log="all")
-epochs = 30
+
+wandb.config.update({
+    "learning_rate": cfg['training']['learning_rate'],
+    "epochs": cfg['training']['epochs'],
+    "batch_size": cfg['dataset']['batch_size'],
+    "img_height": img_height,
+    "img_width": img_width,
+    "train_data_type": cfg['train_data_type'],
+    "test_data_type": cfg['test_data_type'],
+    "fine_tune": cfg['finetude']['fine_tune'],
+})
+epochs = cfg['training']['epochs']
 LOG_DIR = f"{model_name}_logs"
 best_cer = float("inf")
 for epoch in range(1, epochs+1):
@@ -431,21 +428,126 @@ for epoch in range(1, epochs+1):
     train_stats , _ = run_epoch(model, train_loader, criterion, optimizer, device, converter, train=True,
                            epoch_idx=epoch)
     val_stats, best_cer = run_epoch(model, valid_loader, criterion, optimizer, device, converter,
-                                        train=False, save_samples=True, sample_count=10,
+                                        train=False, save_samples=cfg['training']['save_samples'], sample_count=cfg['training']['sample_count'],
                                         log_dir=LOG_DIR, epoch_idx=epoch, best_cer=best_cer)
     print(f"train: {train_stats}\nval  : {val_stats}")
-    ## add T to train starts keys
+    # Log stats to wandb
     train_stats = {f"train_{k}": v for k, v in train_stats.items()}
     val_stats   = {f"val_{k}": v for k, v in val_stats.items()}
     wandb.log({"epoch": epoch, **train_stats, **val_stats})
 
-# %%
+
+import json
+from tqdm.auto import tqdm
+from collections import Counter
+
+def predict(model, loader, device, conv, ) -> Tuple[dict, float]:
+    model.eval()
+    name =  "test"
+    bar = tqdm(loader, desc=f"[{name}]", leave=False)
+
+    results = {'preds': [], 'gts': []}
+    for imgs, tgt, tlen in bar:
+        imgs, tgt, tlen = imgs.to(device), tgt.to(device), tlen.to(device)
+        with torch.set_grad_enabled(False):
+            logp = model(imgs)
+            in_len = torch.full((imgs.size(0),), logp.size(0), dtype=torch.long, device=device)
+           
+        gts  = conv.decode_indices(_split_targets(tgt.cpu(), tlen.cpu()), remove_repeats=False)
+        gts = [list(map(int, g.split())) for g in gts]
+        gts = conv.decode_indices(gts, raw=False)
+        
+     
+        preds= conv.decode(logp.detach().cpu())
+        for p, g in zip(preds, gts):
+            results['preds'].append(p)
+            results['gts'].append(g)
+        bar.set_postfix()
+            
+    result_df = pd.DataFrame(results)
+    return result_df
+
+test_results = predict(model, test_loader, device, converter)
 
 
-# %%
+import editdistance  # For calculating Levenshtein distance (for CER)
+
+def calculate_metrics(test_df):
+    # Initialize variables to store total errors and counts
+    total_subs, total_deletions, total_insertions, total_words, total_chars = 0, 0, 0, 0, 0
+    total_true_positive_words, total_false_positive_words, total_false_negative_words = 0, 0, 0
+    total_true_positive_chars, total_false_positive_chars, total_false_negative_chars = 0, 0, 0
+    
+    for idx, row in test_df.iterrows():
+        # Get ground truth and predicted text
+        ground_truth = row['gts'].strip()
+        prediction = row['preds'].strip()
+        
+        # Split ground truth and prediction into words
+        gt_words = ground_truth.split()
+        pred_words = prediction.split()
+        
+        # Calculate WER (Word Error Rate)
+        # Using Levenshtein distance (edit distance) for word-level WER
+        wer_result = editdistance.eval(gt_words, pred_words)
+        total_subs += wer_result  # Substitutions in words
+        total_deletions += len(gt_words) - len(pred_words)  # Deletions in words
+        total_insertions += len(pred_words) - len(gt_words)  # Insertions in words
+        total_words += len(gt_words)
+        
+        # Calculate F1 at word level
+        true_positives_words = len(set(gt_words).intersection(pred_words))
+        false_positives_words = len(pred_words) - true_positives_words
+        false_negatives_words = len(gt_words) - true_positives_words
+        
+        total_true_positive_words += true_positives_words
+        total_false_positive_words += false_positives_words
+        total_false_negative_words += false_negatives_words
+        
+        # Calculate CER (Character Error Rate)
+        gt_chars = ''.join(gt_words)
+        pred_chars = ''.join(pred_words)
+        
+        # Using Levenshtein distance (edit distance) for character-level CER
+        cer_result = editdistance.eval(gt_chars, pred_chars)
+        total_subs += cer_result  # Substitutions in characters
+        total_deletions += len(gt_chars) - len(pred_chars)  # Deletions in characters
+        total_insertions += len(pred_chars) - len(gt_chars)  # Insertions in characters
+        total_chars += len(gt_chars)
+        
+        # Calculate F1 at character level
+        true_positives_chars = len(set(gt_chars).intersection(pred_chars))
+        false_positives_chars = len(pred_chars) - true_positives_chars
+        false_negatives_chars = len(gt_chars) - true_positives_chars
+        
+        total_true_positive_chars += true_positives_chars
+        total_false_positive_chars += false_positives_chars
+        total_false_negative_chars += false_negatives_chars
+        
+    # Calculate WER
+    wer = (total_subs + total_deletions + total_insertions) / total_words if total_words > 0 else 0
+    
+    # Calculate CER
+    cer = (total_subs + total_deletions + total_insertions) / total_chars if total_chars > 0 else 0
+    
+    # Calculate F1 Score at word level
+    precision_word = total_true_positive_words / (total_true_positive_words + total_false_positive_words) if total_true_positive_words + total_false_positive_words > 0 else 0
+    recall_word = total_true_positive_words / (total_true_positive_words + total_false_negative_words) if total_true_positive_words + total_false_negative_words > 0 else 0
+    f1_word = (2 * precision_word * recall_word) / (precision_word + recall_word) if precision_word + recall_word > 0 else 0
+    
+    # Calculate F1 Score at character level
+    precision_char = total_true_positive_chars / (total_true_positive_chars + total_false_positive_chars) if total_true_positive_chars + total_false_positive_chars > 0 else 0
+    recall_char = total_true_positive_chars / (total_true_positive_chars + total_false_negative_chars) if total_true_positive_chars + total_false_negative_chars > 0 else 0
+    f1_char = (2 * precision_char * recall_char) / (precision_char + recall_char) if precision_char + recall_char > 0 else 0
+    
+    return wer, cer, f1_word, f1_char
 
 
-# %%
 
+# Get metrics
+wer, cer, f1_word, f1_char = calculate_metrics(test_results)
 
-
+print(f"WER: {wer}")
+print(f"CER: {cer}")
+print(f"F1 Score (word-level): {f1_word}")
+print(f"F1 Score (character-level): {f1_char}")

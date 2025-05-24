@@ -1,0 +1,49 @@
+# config.yaml
+
+paths:
+  train_csv: "../raw_data/Amharic_Data/train/all_train.csv"
+  test_csv:  "../raw_data/Amharic_Data/test/all_test.csv"
+  root_dir:  "/home/admin/Gabby/Amharic OCR/HandWritten_Amharic_English_OCR/raw_data/Amharic_Data/train"
+  checkpoint_dir: "{model_name}_logs"
+  best_checkpoint: "{model_name}_logs/best_cer.pt"
+  test_root: "/home/admin/Gabby/Amharic OCR/HandWritten_Amharic_English_OCR/raw_data/Amharic_Data/test"
+
+
+train_data_type: "synthetic" # 'handwritten', 'synthetic', 'typed'
+test_data_type: "hdd" # 'handwritten', 'synthetic', 'typed'
+
+dataset:
+  img_height:   100
+  img_width:    1000
+  batch_size:   64
+  num_workers:  4
+  dev_size:    0.2
+  random_state: 42
+
+
+
+model:
+  model_name: "crnn_amharic"
+  hidden_size: 256
+  # num_classes will be computed as len(charset) + 1 in code
+
+finetune:
+  fine_tune: true
+  fine_tune_model_name: 
+  # freeze_layers: true
+  # freeze_layers_count: 2
+training:
+  epochs:         30
+  learning_rate:  3e-4
+  device:         "cuda"      # or "cpu"
+  save_samples:   true
+  sample_count:   10
+
+
+wandb:
+  project:  "Amharic OCR CRNN"
+
+  # API key should be set via WANDB_API_KEY env var, not in config
+
+converter:
+  # charset will be built from train/test CSVs at runtime
