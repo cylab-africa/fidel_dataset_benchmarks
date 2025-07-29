@@ -12,7 +12,7 @@ class TrOCRMyDecoder(torch.nn.Module):
 
     def __init__(self, input_dim, dec_num_layers, dec_num_heads,
                     d_model, d_ff, target_vocab_size, eos_token, sos_token,
-                    pad_token, enc_dropout, dec_dropout, max_seq_length=512, pre_train=False):
+                    pad_token, enc_dropout, dec_dropout, max_seq_length=150, pre_train=False):
 
         super(TrOCRMyDecoder, self).__init__()
 
@@ -22,20 +22,20 @@ class TrOCRMyDecoder(torch.nn.Module):
         # self.encoder = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-handwritten").encoder
         # self.encoder = ViT(image_size = (256, 1024), num_classes= None, mlp_dim=1024, patch_size=32, dim=512, depth= 4, heads = 4 )
         # self.encoder = CNNViT(
-        #     image_size=(256, 1024),    # same as before
+        #     image_size=(128, 1536),    # same as before
         #     patch_size=32,             # same as before
         #     num_classes=None,          # same as before
-        #     dim=512,                   # transformer embedding dim
+        #     dim=256,                   # transformer embedding dim
         #     depth=4,                   # transformer depth
         #     heads=4,                   # transformer heads
         #     mlp_dim=1024,              # transformer MLP hidden dim
         #     pool='cls',                # or 'mean'
-        #     channels=3,                # # of input image channels
+        #     channels=1,                # # of input image channels
         #     dim_head=64,               # per‑head dimension
         #     dropout=0.,                # transformer dropout
         #     emb_dropout=0.,            # embedding dropout
-        #     cnn_hidden_channels=64,    # # channels produced by each conv layer
-        #     cnn_layers=3               # # of conv→BN→ReLU layers
+        #     cnn_hidden_channels=12,    # # channels produced by each conv layer
+        #     cnn_layers=2               # # of conv→BN→ReLU layers
         # )
         self.encoder = CNNEncoder(d_model,input_channels=1)
         # Extract `d_model` from TrOCR encoder
@@ -58,7 +58,6 @@ class TrOCRMyDecoder(torch.nn.Module):
         if not self.pre_train:
         
             encoder_output = self.encoder(padded_input)["last_hidden_state"]  # Shape: (batch_size, num_patches+1, d_model)
-
             encoder_lens = torch.tensor([encoder_output.shape[1]] * encoder_output.shape[0] )
 
 
@@ -84,7 +83,7 @@ class TrOCRMyDecoder(torch.nn.Module):
 
         encoder_lens = torch.tensor([encoder_output.shape[1]] * encoder_output.shape[0] )
         encoder_output                = self.proj(encoder_output)
-        # out                            = self.decoder.recognize_beam_search(encoder_output, encoder_lens,beam_width=10)
+        # out                            = self.decoder.recognize_beam_search(encoder_output, encoder_lens,beam_width=3)
         out                            = self.decoder.recognize_greedy_search(encoder_output, encoder_lens)
 
 
@@ -214,7 +213,6 @@ class Decoder(torch.nn.Module):
         target_embedded = self.dropout(target_embedded)
 
         running_attn = {}
-
 
         for i, layer in enumerate(self.dec_layers):
             target_embedded, attn1, attn = layer(target_embedded, enc_output, enc_input_lengths, dec_enc_attn_mask, pad_mask, look_ahead_mask,pre_train= self.pre_train)
@@ -389,7 +387,7 @@ class DecoderLayer(torch.nn.Module):
         self.dropout3   = nn.Dropout(p=dropout)
 
 
-    def forward(self, padded_targets, enc_output, enc_input_lengths, dec_enc_attn_mask, pad_mask, slf_attn_mask, pre_train= True):
+    def forward(self, padded_targets, enc_output, enc_input_lengths, dec_enc_attn_mask, pad_mask, slf_attn_mask, pre_train= False):
         if not pre_train:
             output1, attn_weights1 = self.mha1(padded_targets, padded_targets, padded_targets, slf_attn_mask )
             output1 = self.dropout1(output1)

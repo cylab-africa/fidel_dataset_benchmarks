@@ -28,7 +28,7 @@ processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-handwritten")
 
 # %%
 class MyCustomOcrDataloader:
-    def __init__(self, path_file, preprocessor, tokenizer, img_root="", transform=None):
+    def __init__(self, path_file, preprocessor, tokenizer, img_root="", transform=None, max_seq_length = 180):
 
         self.data =  pd.read_csv(path_file)
         self.data["line_text"]  = self.data["line_text"].str.strip()
@@ -39,6 +39,7 @@ class MyCustomOcrDataloader:
         self.n_data_points = len(self.data)
         self.img_root = img_root
         self.transform = transform
+        self.max_seq_length = max_seq_length
     def __len__(self):
         return self.n_data_points
     
@@ -54,7 +55,7 @@ class MyCustomOcrDataloader:
         pixel_values = self.preprocessor(image, return_tensors="pt").pixel_values
 
 
-        text = self.tokenizer(text, return_tensors="pt", max_length = 512, truncation=True).input_ids
+        text = self.tokenizer(text, return_tensors="pt", max_length = self.max_seq_length, truncation=True).input_ids
         transcripts_shifted = text[:,:-1]
         golden_transcript = text[:,1:]
         
