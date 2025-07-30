@@ -451,7 +451,7 @@ for task in ["TYPED", ]:
     checkpoint_root = config["CHECKPOINT_BASE"]
 
     if pre_train :
-        pre_train()
+        pre_train_weights(model)
     #     checkpoint_root = os.path.join(os.getcwd(), "checkpoints-basic-cnn-llm-pretrain-trocr")
     # else:
     #     # checkpoint_root = os.path.join(os.getcwd(), "checkpoints-basic-cnn-synth-cont-trocr")
@@ -522,6 +522,10 @@ for task in ["TYPED", ]:
                 save_model(model, optimizer, scheduler, ['val_distance', cers], epoch, best_distance_model_path)
                 # wandb.save(best_loss_model_path)
                 print("Saved distance training model")
+                if config["scheduler"] == "ReduceLR":
+                    scheduler.step(levenshtein_distance)
+                else:
+                    scheduler.step()
             print("cer {:.04f}".format(cers))
             if USE_WANDB:
                 wandb.log({"train_loss"     : train_loss,
@@ -538,10 +542,7 @@ for task in ["TYPED", ]:
                         "train_perplexity"  : train_perplexity,
                         "learning_rate"     : curr_lr})
 
-        if config["scheduler"] == "ReduceLR":
-            scheduler.step(levenshtein_distance)
-        else:
-            scheduler.step()
+
 
         if train_loss <= best_loss:
             best_loss = train_loss
