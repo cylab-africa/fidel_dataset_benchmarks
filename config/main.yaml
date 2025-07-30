@@ -88,11 +88,11 @@ scheduler       : "ReduceLR"     # CosineAnnealing, ReduceLR
 ## we are validating every 2 epochs but scheduler acts on every epoch. Set patience accordingly
 ## patience less than validation frquency can mean learning rate always dropping after patience epochs
 ## specify a suitable threshold too
-factor          : 0.9
-patience        : 6
+factor          : 0.5
+patience        : 3
 
 ###### Training Parameters -----------------------------------------------------
-epochs          : 100
+epochs          : 50
 
 ###### Name --------------------------------------------------------------------
 Name: "blessed"  

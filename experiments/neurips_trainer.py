@@ -35,7 +35,7 @@ task  = config["TRAIN_TASK"]
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 pre_train = config["LANGUAGE_MODEL"]
 # for task in ["TYPED", "HANDWRITTEN","SYNTHETIC", "HDD", ]:
-for task in ["TYPED", ]:
+for task in ["COMBINED", ]:
 
 
     TRAIN_PATH =config[task+"_"+"TRAIN_PATH"]
@@ -383,7 +383,7 @@ for task in ["TYPED", ]:
     if config["scheduler"] == "ReduceLR":
     #Feel Free to change any of the initializations you like to fit your needs
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
-                        factor=config["factor"], patience=config["patience"], min_lr=1E-8, verbose=True)
+                        factor=config["factor"], patience=config["patience"], min_lr=1E-8)
 
     elif config["scheduler"] == "CosineAnnealing":
         #Feel Free to change any of the initializations you like to fit your needs

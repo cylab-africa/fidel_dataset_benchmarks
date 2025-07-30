@@ -1,0 +1,10 @@
+opencv-python-headless
+transformers
+torch
+seaborn
+pandas
+wandb
+Levenshtein
+jiwer
+scikit-learn
+einops
