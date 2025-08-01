@@ -27,7 +27,7 @@ from dotenv import load_dotenv
 
 import yaml
 
-with open("config.yaml") as f:
+with open("../config/crrn_config.yaml") as f:
     cfg = yaml.safe_load(f)
 
 

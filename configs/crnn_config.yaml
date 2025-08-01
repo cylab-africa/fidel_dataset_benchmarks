@@ -3,10 +3,10 @@
 paths:
   train_csv: "../raw_data/Amharic_Data/train/all_train.csv"
   test_csv:  "../raw_data/Amharic_Data/test/all_test.csv"
-  root_dir:  "/home/admin/Gabby/Amharic OCR/HandWritten_Amharic_English_OCR/raw_data/Amharic_Data/train"
+  root_dir:  "root dir/HandWritten_Amharic_English_OCR/raw_data/Amharic_Data/train"
   checkpoint_dir: "{model_name}_logs"
   best_checkpoint: "{model_name}_logs/best_cer.pt"
-  test_root: "/home/admin/Gabby/Amharic OCR/HandWritten_Amharic_English_OCR/raw_data/Amharic_Data/test"
+  test_root: "root dir/HandWritten_Amharic_English_OCR/raw_data/Amharic_Data/test"
 
 
 train_data_type: "synthetic" # 'handwritten', 'synthetic', 'typed'
