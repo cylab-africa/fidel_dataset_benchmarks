@@ -1,0 +1,44 @@
+[project]
+name = "fidel-baseline"                       # normalized package name
+version = "0.1.0"
+description = "Training and evaluation pipeline for Amharic OCR with CRNN/TrOCR baselines."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Gabriel Zencha Ashungafac", email = "gzenchaa@andrew.cmu.edu" }
+]
+dependencies = [
+  "torch>=2.0",
+  "omegaconf>=2.3",           # or pyyaml if parsing config.yaml directly
+  "numpy>=1.25",
+  "tqdm",
+  "wandb",                    # if you still use W&B
+  "torchvision",              # if relevant
+  "PyYAML>=6.0",
+]
+
+[project.urls]
+"Repository" = "https://github.com/cylab-africa/fidel_dataset_benchmarks"
+"Homepage" = "https://github.com/cylab-africa/fidel_dataset_benchmarks"
+
+[build-system]
+requires = ["setuptools>=65.5.0", "wheel", "tomli"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+
+[tool.isort]
+profile = "black"
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203"]
+exclude = ["build", "dist", ".venv", "__pycache__"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "--maxfail=1 -q"
+testpaths = ["tests"]
