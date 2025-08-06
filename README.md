@@ -45,7 +45,7 @@ Features:
 1. **Clone the repo**
 
    ```bash
-   git https://github.com/cylab-africa/fidel_dataset_benchmarks.git
+   git clone https://github.com/cylab-africa/fidel_dataset_benchmarks.git
    cd fidel_dataset_benchmarks
    ```
 
@@ -103,8 +103,7 @@ fidel_dataset_benchmarks/
 │   ├── models/
 │   ├── utils/
 │   └── ...
-├── scripts/
-│   └── runner.sh             # Conda wrapper (optional)
+
 └── README.md
 ```
 
@@ -130,8 +129,8 @@ If you prefer Conda:
 ```bash
 conda create -n ocr_env python=3.10 -y
 conda activate ocr_env
-pip install -r requirements.txt
-# then run:
+
+# then follow previous steps to istall and run package:
 ```
 
 
