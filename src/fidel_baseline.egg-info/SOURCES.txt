@@ -2,9 +2,15 @@ LICENSE
 README.md
 pyproject.toml
 src/fidel_baseline/__init__.py
-src/fidel_baseline/train.py
+src/fidel_baseline/benchmark.py
 src/fidel_baseline.egg-info/PKG-INFO
 src/fidel_baseline.egg-info/SOURCES.txt
 src/fidel_baseline.egg-info/dependency_links.txt
 src/fidel_baseline.egg-info/requires.txt
 src/fidel_baseline.egg-info/top_level.txt
+src/models/crnn.py
+src/models/models.py
+src/models/vit.py
+src/my_datasets/crrn_dataset.py
+src/utils/evaluation.py
+src/utils/train_loop.py

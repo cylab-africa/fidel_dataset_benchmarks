@@ -1,5 +1,5 @@
 Metadata-Version: 2.4
-Name: fidel-baseline
+Name: fidel_baseline
 Version: 0.1.0
 Summary: Training and evaluation pipeline for Amharic OCR with CRNN/TrOCR baselines.
 Author-email: Gabriel Zencha Ashungafac <gzenchaa@andrew.cmu.edu>

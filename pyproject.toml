@@ -1,5 +1,5 @@
 [project]
-name = "fidel-baseline"                       # normalized package name
+name = "fidel_baseline"                       # normalized package name
 version = "0.1.0"
 description = "Training and evaluation pipeline for Amharic OCR with CRNN/TrOCR baselines."
 readme = "README.md"
