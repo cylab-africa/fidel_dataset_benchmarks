@@ -1,7 +1,11 @@
 torch>=2.0
 omegaconf>=2.3
-numpy>=1.25
+numpy
+pandas
 tqdm
 wandb
 torchvision
 PyYAML>=6.0
+scikit-learn
+dotenv
+editdistance

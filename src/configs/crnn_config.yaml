@@ -6,7 +6,7 @@ paths:
   root_dir:  "src/sample_data/image_files/"
   checkpoint_dir: "{model_name}_logs"
   best_checkpoint: "{model_name}_logs/best_cer.pt"
-  test_root: "src/sample_data/image_files/test"
+  test_root: "src/sample_data/image_files/"
   log_dir: "src/sample_data/logs"
 
 
@@ -34,7 +34,7 @@ finetune:
   # freeze_layers: true
   # freeze_layers_count: 2
 training:
-  epochs:         30
+  epochs:         1
   learning_rate:  0.00004
   device:         "cuda"      # or "cpu"
   save_samples:   true

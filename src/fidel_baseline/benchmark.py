@@ -124,8 +124,15 @@ def main(
     # Final evaluation
     preds_df = predict(model, test_loader, device, converter)
     metrics = calculate_metrics(preds_df)
-    wandb.log(metrics)
-    print("Metrics:", metrics)
+    wer, cer, f1_word, f1_char = metrics
+
+    wandb.log({
+        'test_wer': wer,
+        'test_cer': cer,
+        'test_f1_word': f1_word,
+        'test_f1_char': f1_char
+    })
+    print(f"Test metrics: WER={wer}, CER={cer}, F1-Word={f1_word}, F1-Char={f1_char}")
     return metrics
 
 if __name__ == "__main__":

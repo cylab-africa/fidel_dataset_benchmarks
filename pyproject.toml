@@ -11,11 +11,15 @@ authors = [
 dependencies = [
   "torch>=2.0",
   "omegaconf>=2.3",           # or pyyaml if parsing config.yaml directly
-  "numpy>=1.25",
+  "numpy",
+  "pandas",
   "tqdm",
   "wandb",                    # if you still use W&B
   "torchvision",              # if relevant
   "PyYAML>=6.0",
+  "scikit-learn",
+  "dotenv",
+  "editdistance"
 ]
 
 [project.urls]

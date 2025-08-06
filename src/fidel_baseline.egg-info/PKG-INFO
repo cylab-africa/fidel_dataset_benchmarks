@@ -384,155 +384,175 @@ Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: torch>=2.0
 Requires-Dist: omegaconf>=2.3
-Requires-Dist: numpy>=1.25
+Requires-Dist: numpy
+Requires-Dist: pandas
 Requires-Dist: tqdm
 Requires-Dist: wandb
 Requires-Dist: torchvision
 Requires-Dist: PyYAML>=6.0
+Requires-Dist: scikit-learn
+Requires-Dist: dotenv
+Requires-Dist: editdistance
 Dynamic: license-file
 
-# Fidel baseline Training and Evaluation of  CRNN
+# Fidel Baseline: CRNN-based Amharic OCR Training & Evaluation
 
-This project provides an end-to-end training pipeline for an Amharic OCR model using a CRNN architecture. It uses Conda for environment management, a `config.yaml` for parameter configuration, and Weights & Biases for experiment tracking.
+A complete end-to-end pipeline for training and evaluating a CRNN-based Amharic OCR model.
+Features:
+
+* 🔧 **Configurable** via YAML
+* 🐍 **Installable** as a module (and editable during development)
+* 🎛️ **Weights & Biases** integration for experiment tracking
+* ☁️ Works with Conda or plain `venv` + `pip`
 
 ---
 
-## Table of Contents
+## 📋 Table of Contents
+
 1. [Prerequisites](#prerequisites)
-2. [Project Structure](#project-structure)
+2. [Installation](#installation)
 3. [Configuration](#configuration)
-   - [.env file](#env-file)
-   - [config.yaml](#configyaml)
-4. [Conda Environment](#conda-environment)
-5. [Executing Training](#executing-training)
-6. [Scripts](#scripts)
-7. [Notes](#notes)
+
+   * [.env](#env-file)
+   * [config YAML](#configyaml)
+4. [Project Layout](#project-structure)
+5. [Usage](#usage)
+
+   * [As a module](#run-as-a-module)
+   * [Via console-script (optional)](#console-script)
+6. [Conda-only Quick-Start](#conda-quick-start)
+7. [Scripts Reference](#scripts)
+8. [TrOCR variation](#trocr-variation)
+9. [Notes](#notes)
 
 ---
 
-## Prerequisites
-- **Operating System:** Linux/macOS (Unix-like)
-- **Python:** 3.8 or higher
-- **Conda:** An existing Conda installation
-- **GPU (optional):** CUDA-enabled GPU for faster training
+## 🛠️ Prerequisites
+
+* **OS:** Linux or macOS (Unix-like)
+* **Python:** 3.8+
+* **Git** (for cloning)
+* **(Optional)** CUDA-enabled GPU for faster training
+* **Weights & Biases** account (for experiment logging)
 
 ---
 
-## Project Structure
-```
-CRNN
-├── .env
-├── config.yaml
-├── requirements.txt      # pip dependencies (for venv users)
-├── environment.yml       # Conda environment spec (optional)
-├── train.py              # Main training script
-├── run_training.sh       # Bash script to launch training
-├── README.md             # This file
-└── src/                  # Source code (datasets, models, utils)
-```
+## ⚙️ Installation
+
+1. **Clone the repo**
+
+   ```bash
+   git https://github.com/cylab-africa/fidel_dataset_benchmarks.git
+   cd fidel_dataset_benchmarks
+   ```
+
+2. **Install in editable mode**
+
+   ```bash
+   # using pip+venv or inside any Python env:
+   python3 -m pip install --upgrade pip
+   python3 -m pip install -e .
+   ```
+
+   This does two things:
+
+   * Puts `fidel_baseline` (and other packages under `src/`) on your PYTHONPATH
+   * (If configured) creates a `fidel-benchmark` console script
 
 ---
 
-## Configuration
+## 🔧 Configuration
 
 ### .env file
-Create a `.env` in the project root (add to `.gitignore`):
+
+In the project root, create a `.env` (and add it to `.gitignore`):
+
 ```bash
 # .env
-WANDB_API_KEY=<your wandb API key>
+WANDB_API_KEY=<your-wandb-key>
 ```
-The script will load these credentials at runtime to authenticate with Weights & Biases.
 
-### config.yaml
-All hyperparameters and file paths live in `config.yaml`. Example:
-```yaml
-paths:
-  train_csv: "../raw_data/.../all_train.csv"
-  test_csv:  "../raw_data/.../all_test.csv"
-  root_dir:  "../raw_data/Amharic_Data/train"
-  test_root: "../raw_data/Amharic_Data/test"
+### config YAML
 
-dataset:
-  img_height:   100
-  img_width:    1000
-  batch_size:   64
-  dev_size:     0.2
-  random_state: 42
+All hyperparams & paths live in a YAML. E.g. `src/configs/crnn_config.yaml`:
 
-testing:
-  train_data_type: "typed"
-  test_data_type:  "hdd"
 
-model:
-  hidden_size: 256
-  model_name:  "my_ocr_model"
 
-training:
-  learning_rate: 3e-4
-  epochs:        30
-  save_samples:  true
-  sample_count:  10
-
-finetune:
-  fine_tune:             false
-  fine_tune_model_name:  ""
-```
-Adjust the paths and parameters to suit your dataset and experimentation needs.
+Adjust these values and file paths to your setup.
 
 ---
 
-## Conda Environment
-This project assumes you have a Conda environment with all dependencies installed.
+## 📁 Project Structure
 
-1. **Create environment** (if not already):
-   ```bash
-   conda create -n ocr_env python=3.9
-   ```
-2. **Activate environment**:
-   ```bash
-   conda activate ocr_env
-   ```
-3. **Install packages**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-  
-   
+```
+fidel_dataset_benchmarks/
+├── .env
+├── pyproject.toml            # installable package config
+├── requirements.txt          # for non-editable install
+├── src/
+│   ├── configs/
+│   │   ├── crnn_config.yaml
+│   │   └── main.yaml
+│   ├── fidel_baseline/       # python package
+│   │   ├── __init__.py
+│   │   └── benchmark.py
+│   ├── my_datasets/
+│   ├── models/
+│   ├── utils/
+│   └── ...
+├── scripts/
+│   └── runner.sh             # Conda wrapper (optional)
+└── README.md
+```
 
 ---
 
-## Executing Training
-Use the `runner.sh` script to launch training:
+## 🚀 Usage
+
+### Run as a module
 
 ```bash
-./runner.sh <conda_env_name> [config_file]
+python3 -m fidel_baseline.benchmark \
+  -c src/configs/crnn_config.yaml
 ```
 
-- `<conda_env_name>`: Name of your existing Conda environment (e.g., `ocr_env`).
-- `[config_file]`: Path to `config.yaml` (defaults to `config.yaml`).
 
-**Example**:
+
+---
+
+## 🐍 Conda-only Quick-Start
+
+If you prefer Conda:
+
 ```bash
-chmod +x runner.sh
-./runner.sh ocr_env
-# or with custom config
-./runner.sh ocr_env configs/my_config.yaml
+conda create -n ocr_env python=3.10 -y
+conda activate ocr_env
+pip install -r requirements.txt
+# then run:
 ```
 
-This script will:
-1. Load environment variables from `.env`.
-2. Initialize and activate the specified Conda environment.
-3. Run `train.py --config <config_file>` to start training.
-4. After training is complete model results on test will be printed to the consolde
 
 ---
 
-## Scripts
-- **`train.py`**: Main training entry point. Parses `--config`, builds dataset, model, and training loop.
-- **`runner.sh`**: Convenience shell wrapper to set up env and kick off `train.py`.
+## 📜 Scripts
+
+* **`fidel_baseline/benchmark.py`**
+
+  * Entry point: parses `--config`, builds datasets, model, trains & evaluates.
 
 ---
 
 
-# Fidel baseline Training and Evaluation of  TrOCR
-change directory to TrOCR and exexcute python scripts there.
+(Or mirror the module approach if you package it similarly.)
+
+---
+
+## 📝 Notes
+
+* Make sure your `PYTHONPATH` includes `src/` if you skip installation.
+* You can monitor live metrics in W\&B under your project name.
+* Feel free to add more console scripts or sub-commands as you grow the codebase!
+
+---
+
+Happy training! 🎉

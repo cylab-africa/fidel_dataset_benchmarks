@@ -45,7 +45,7 @@ Features:
 1. **Clone the repo**
 
    ```bash
-   git clone https://github.com/yourorg/fidel_dataset_benchmarks.git
+   git https://github.com/cylab-africa/fidel_dataset_benchmarks.git
    cd fidel_dataset_benchmarks
    ```
 
@@ -119,12 +119,7 @@ python3 -m fidel_baseline.benchmark \
   -c src/configs/crnn_config.yaml
 ```
 
-### Console-script (if enabled)
 
-```bash
-fidel-benchmark \
-  --config src/configs/crnn_config.yaml
-```
 
 ---
 
@@ -137,14 +132,8 @@ conda create -n ocr_env python=3.10 -y
 conda activate ocr_env
 pip install -r requirements.txt
 # then run:
-./scripts/runner.sh ocr_env src/configs/crnn_config.yaml
 ```
 
-The `runner.sh` will:
-
-1. Load your `.env`
-2. Activate the specified Conda env
-3. Invoke `python -m fidel_baseline.benchmark --config <path>`
 
 ---
 
