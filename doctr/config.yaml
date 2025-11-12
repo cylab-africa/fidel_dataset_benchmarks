@@ -1,0 +1,49 @@
+# DocTR Text Recognition Training Configuration
+
+# Experiment settings
+experiment:
+  name: "crnn_vgg16_bn amh only"  # Base name for experiment
+  output_dir: "./experiments"     # Root directory for all experiments
+
+# Weights & Biases configuration
+wandb:
+  api_key: "abcd"  # Replace with your actual W&B API key
+  project: "project_amh"   # W&B project name
+
+# Data configuration
+data:
+  train_csv: "../csvs/train_amharic_only.csv"      # Path to training CSV (will be split into train/val)
+  test_csv: "../csvs/test_amharic_only.csv"        # Path to test CSV (for final evaluation)
+  train_image_root: "../fidel-dataset/train"        # Root folder containing images
+  test_image_root: "../fidel-dataset/test"
+  val_split_ratio: 0.15              # Validation split ratio (0.15 = 15% for validation)
+
+# Model configuration
+model:
+  architecture: "crnn_vgg16_bn"  # Model architecture
+  pretrained: false                          # Use pretrained weights
+  input_size: 32                           # Input height (width will be 4x this)
+  width_multiplier: 40
+  vocab: "combined"                        # Vocabulary: "english", "ethiopic", "combined" etc.
+  max_length: 160
+
+# Training configuration
+training:
+  # Hardware settings
+  num_workers: 4                     # Number of data loader workers
+  
+  # Training parameters
+  epochs: 50                         # Number of training epochs
+  batch_size: 32                     # Training batch size
+  random_seed: 42                    # Random seed for reproducibility
+  amp: false                         # Use automatic mixed precision
+  
+  # Optimizer settings
+  optimizer:
+    name: "adam"                     # Optimizer: "adam" or "adamw"
+    lr: 0.001                        # Learning rate
+    weight_decay: 0.0001             # Weight decay
+  
+  # Learning rate scheduler
+  scheduler:
+    name: "cosine"                   # Scheduler: "cosine" or "onecycle"
